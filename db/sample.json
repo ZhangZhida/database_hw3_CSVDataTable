@@ -1,0 +1,27 @@
+{
+  "state": {
+    "table_name": "rings",
+    "primary_key_columns": null,
+    "next_rid": 10,
+    "column_names": [
+      "uni",
+      "first_name",
+      "last_name",
+      "email"
+    ]
+  },
+  "rows": {
+
+  }, 
+  "indexes": {
+    "PRIMARY": {
+      "name": "PRIMARY"
+    },
+    "EMAIL": {
+
+    },
+    "LAST_NAME": {
+      
+    }
+  }
+}
