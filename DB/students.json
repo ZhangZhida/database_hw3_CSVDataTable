@@ -1,0 +1,57 @@
+{
+  "state": {
+    "table_name": "students",
+    "primary_key_columns": [
+      "uni"
+    ],
+    "next_row_id": 4,
+    "column_names": [
+      "uni",
+      "first_name",
+      "last_name"
+    ]
+  },
+  "rows": {
+    "2": {
+      "uni": "zz",
+      "first_name": "zhida",
+      "last_name": "zhang"
+    },
+    "3": {
+      "uni": "yy",
+      "first_name": "zhida",
+      "last_name": "zhang"
+    }
+  },
+  "indexes": {
+    "PRIMARY": {
+      "name": "PRIMARY",
+      "columns": [
+        "uni"
+      ],
+      "kind": "PRIMARY",
+      "index_data": {
+        "zz": [
+          2
+        ],
+        "yy": [
+          3
+        ]
+      }
+    },
+    "name": {
+      "name": "name",
+      "columns": [
+        "first_name",
+        "last_name"
+      ],
+      "kind": "INDEX",
+      "index_data": {
+        "zhida_zhang": [
+          2,
+          3
+        ]
+      }
+    }
+  }
+}

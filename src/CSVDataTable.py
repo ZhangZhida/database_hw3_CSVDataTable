@@ -4,6 +4,7 @@ import logging
 
 
 
+
 class Index:
 
     def __init__(self, index_name, index_columns, kind):
@@ -60,16 +61,60 @@ class Index:
         convert the index and state to a json object
         :return: json object with index info
         """
-        pass
+        result = {}
+        result["name"] = self._index_name
+        result["columns"] = self._index_columns
+        result["kind"] = self._kind
+        result["index_data"] = self._index_data
+
+        return result
 
     def from_json(self):
         pass
 
     def matches_index(self, template):
-        pass
+        """
+        Return how many distinct entries there are in an index data
+        :param template:
+        :return:
+        """
+        return self._index_distinct_value_count(template)
+
+    def _index_distinct_value_count(self, template):
+        """
+        Return how many distinct entries there are in an index data
+        :param template:
+        :return:  int type or None. If the template keys contain all the index columns, return how many distinct
+                  entries there are in an index data, otherwise, return None.
+        """
+        k = set(list(template.keys()))
+        c = set(self._index_columns)
+
+        if c.issubset(k):
+            # index matches
+            if self._index_data is not None:
+                kk = len(self._index_data.keys())
+            else:
+                kk = 0
+        else:
+            kk = None
+
+        return kk
 
     def find_rows(self, tmp):
-        pass
+        """
+        Assuming the tmp contains all the index columns.
+        Using the index to find the matching rows by template. Return the rows with key value that matches the template
+        :param tmp: template
+        :return: list type. Rows
+        """
+        t_vals = [tmp[k] for k in self._index_columns]
+        t_s = "_".join(t_vals)
+
+        # get the corresponding index bucket
+        d = self._index_data.get(t_s, None)
+
+        return d
 
 
 
@@ -77,7 +122,7 @@ class CSVDataTable:
     """
     The database engine behaviours implementation on CSV tables
     """
-
+    _default_directory = "/home/zhida/Desktop/Database/code/HW3/DB/"
 
     def __init__(self, table_name, column_names=None, primary_key_columns=None, loadit=False):
         """
@@ -192,7 +237,28 @@ class CSVDataTable:
         :return:
         """
 
-        pass
+        d = {
+            "state": {
+                "table_name": self._table_name,
+                "primary_key_columns": self._primary_key_columns,
+                "next_row_id": self._get_next_row_id(),
+                "column_names": self._column_names
+            }
+        }
+
+        filename = CSVDataTable._default_directory + self._table_name + ".json"
+        d["rows"] = self._rows
+
+        for k, v in self._indexes.items():
+            idxs = d.get("indexes", {})
+            idx_string = v.to_json()
+            idxs[k] = idx_string
+            d["indexes"] = idxs
+
+        d = json.dumps(d, indent=2)
+        with open(filename, "w+") as output:
+            output.write(d)
+
 
     def load(self):
         """
@@ -210,17 +276,67 @@ class CSVDataTable:
     def matches_template(self, row, tmp):
         pass
 
-    def get_best_index(self, t):
-        pass
+    def get_best_index(self, tmp):
+        """
 
-    def find_by_index(self, tmp, idx):
-        pass
+        :param tmp: dict type. template
+        :return: String type. most selective index name
+        """
+
+        best = None
+        name = None
+
+        if self._indexes is not None:
+            for k, v in self._indexes.items():
+                cnt = v.matches_index(tmp)
+                if cnt is not None:
+                    if best is None:
+                        best = cnt
+                        name = k
+                    else:
+                        if cnt > best:
+                            best = cnt
+                            name = k
+        return name
+
+
+    def find_by_index(self, tmp, idx: Index):
+        r = idx.find_rows(tmp)
+        res = [self._rows[rid] for rid in r]
+        return res
 
     def find_by_scan_template(self, tmp, rows):
         pass
 
     def find_by_template(self, tmp, fields, use_index=True):
-        pass
+        """
+
+        :param tmp: Dictionary type, template to match
+        :param fields: Fields to get, like project clause
+        :param use_index: if True, use index, if False, no index used
+        :return: CSVDataTable type . A new derived CSVDataTable
+        """
+        idx = self.get_best_index(tmp)
+        logging.debug("Index used is = %s", idx)
+
+        if idx is None or use_index is False:
+            # if not using indexes
+            result = self.find_by_scan_template(tmp=tmp, rows=self.get_rows())
+        else:
+            # use index to speed up
+            idx = self._indexes[idx]
+            # get the rows find by the index
+            res_index = self.find_by_index(tmp=tmp, idx=idx)
+            # scan on the rows left
+            result = self.find_by_scan_template(tmp, res_index)
+
+        derived_table_name = "Derived CSVDataTable: " + self._table_name
+        new_t = CSVDataTable(table_name=derived_table_name, loadit=True)
+        new_t.load_from_rows(table_name=derived_table_name, rows=result)
+
+        return new_t
+
+
 
     def insert(self, row):
 

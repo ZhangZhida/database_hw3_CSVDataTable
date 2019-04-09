@@ -24,6 +24,22 @@ def load(filename):
 
     return result, cols
 
+def make_test_table(b_index=True):
+    t = CSVDataTable.CSVDataTable(table_name="students", column_names=["uni", "first_name", "last_name"],
+                                  primary_key_columns=["uni"], loadit=None)
+    r = {
+        "uni": "zz",
+        "first_name": "zhida",
+        "last_name": "zhang"
+    }
+    t.insert(r)
+    r["uni"] = "yy"
+    t.insert(r)
+    if b_index:
+        index_columns = ["first_name", "last_name"]
+        t.add_index(index_name="name", column_list=index_columns, kind="INDEX")
+
+    return t
 
 def test_create_table():
     t = CSVDataTable.CSVDataTable(table_name="students", column_names=["uni", "first_name", "last_name"],
@@ -69,6 +85,35 @@ def test_insert_on_index():
     t.add_index(index_name="name", column_list=index_columns, kind="INDEX")
     print("t = ", t)
 
+def test_save_db():
+    t = CSVDataTable.CSVDataTable(table_name="students", column_names=["uni", "first_name", "last_name"],
+                                  primary_key_columns=["uni"], loadit=None)
+    r = {
+        "uni": "zz",
+        "first_name": "zhida",
+        "last_name": "zhang"
+    }
+    t.insert(r)
+    r["uni"] = "yy"
+    t.insert(r)
+
+    index_columns = ["first_name", "last_name"]
+    t.add_index(index_name="name", column_list=index_columns, kind="INDEX")
+
+    # save
+    t.save()
+
+def test_find_by_template():
+    t = make_test_table()
+
+    tmp = {
+        "last_name": "zhang"
+    }
+    fields = tmp.keys()
+    new_t = t.find_by_template(tmp, fields, use_index=True)
+    print("new_t = ", new_t)
+
+
 
 
 
@@ -80,4 +125,6 @@ def test_insert_on_index():
 # test_create_table()
 # test_load_data()
 # test_compute_key_add_to_index()
-test_insert_on_index()
+# test_insert_on_index()
+# test_save_db()
+test_find_by_template()
