@@ -7,12 +7,29 @@ import logging
 
 class Index:
 
-    def __init__(self, index_name, index_columns, kind):
-        self._index_name = index_name
-        self._index_columns = index_columns
-        self._kind = kind
+    def __init__(self, index_name=None, index_columns=None, kind=None, loadit=None):
+        """
 
-        self._index_data = None  # dictionary that contains the index data
+        :param index_name:
+        :param index_columns:
+        :param kind:
+        :param loadit: dict type. If provided, will load all the data from this external index.
+        """
+        if loadit is None:
+            self._index_name = index_name
+            self._index_columns = index_columns
+            self._kind = kind
+
+            self._index_data = None  # dictionary that contains the index data
+        else:
+            idx = self.from_json(loadit)
+            # self._index_name = idx._index_name
+            # self._index_columns = idx._index_columns
+            # self._kind = idx._kind
+            # self._index_data = idx._index_data
+
+
+
 
     def compute_key(self, row):
 
@@ -69,8 +86,12 @@ class Index:
 
         return result
 
-    def from_json(self):
-        pass
+    def from_json(self, dict):
+        self._index_name = dict["name"]
+        self._index_columns = dict["columns"]
+        self._kind = dict["kind"]
+        self._index_data = dict["index_data"]
+
 
     def matches_index(self, template):
         """
@@ -123,6 +144,7 @@ class CSVDataTable:
     The database engine behaviours implementation on CSV tables
     """
     _default_directory = "/home/zhida/Desktop/Database/code/HW3/DB/"
+    show_index_data = True
 
     def __init__(self, table_name, column_names=None, primary_key_columns=None, loadit=False):
         """
@@ -164,7 +186,7 @@ class CSVDataTable:
 
     def add_index(self, index_name, column_list, kind):
         """
-        add index
+        Add index with no index data.
         :param index_name:
         :param column_list:
         :param kind:
@@ -205,11 +227,46 @@ class CSVDataTable:
     # def __str__(self):
     #     return None
 
-    def _get_primary_key(self, r):
-        pass
+    def _get_primary_key(self, r: dict):
+        """
+
+        :param r: dict type.
+        :return: dict type. Primary key value.
+        """
+        res = {}
+        for k in self._primary_key_columns:
+            res[k] = r[k]
+        return res
+
 
     def _get_primary_key_string(self, r):
-        pass
+        key = self._get_primary_key(r)
+        key_str = "_".join(key.values())
+        return key_str
+
+    def _get_index_key(self, r, idx):
+        """
+        get the value of index key in a row
+        :param r:
+        :param idx:
+        :return: dict type.
+        """
+        res = {}
+        for k in idx._index_columns:
+            if k in r.keys():
+                res[k] = r[k]
+            else:
+                return None
+        return res
+
+    def _get_index_key_string(self, r, idx):
+
+        res = self._get_index_key(r, idx)
+        if res is None:
+            return None
+        else:
+            return "_".join(res.values())
+
 
     def _get_next_row_id(self):
         self._next_row_id += 1
@@ -221,14 +278,26 @@ class CSVDataTable:
     def _remove_row(self, rid):
         pass
 
-    def import_data(self, rows):
+    def import_data(self, rows: list):
         """
         import data
-        :param import_data:
+        :param rows:
         :return:
         """
         for r in rows:
             self.insert(r)
+
+    def __str__(self):
+        s = "\ntable name = " + self._table_name + "\n"
+        s = s + "primary_key_columns = " + str(self._column_names) + "\n"
+        s = s + "column_names = " + str(self._column_names) + "\n"
+        s = s + "new_row_id = " + str(self._next_row_id) + "\n"
+
+        if self.show_index_data:
+            for k, v in self._indexes.items():
+                s = s + str(v)
+        return s
+
 
 
     def save(self):
@@ -246,7 +315,7 @@ class CSVDataTable:
             }
         }
 
-        filename = CSVDataTable._default_directory + self._table_name + ".json"
+        filename = self._get_index_filename()
         d["rows"] = self._rows
 
         for k, v in self._indexes.items():
@@ -259,19 +328,38 @@ class CSVDataTable:
         with open(filename, "w+") as output:
             output.write(d)
 
+    def _get_index_filename(self):
+
+        return CSVDataTable._default_directory + self._table_name + ".json"
 
     def load(self):
         """
-
+        load index data and state info from local .json file
         :return:
         """
-        pass
+        filename = self._get_index_filename()
+        with open(filename, "r") as inputfile:
+            d = json.load(inputfile)
+
+            state = d["state"]
+            self._table_name = state["table_name"]
+            self._primary_key_columns = state["primary_key_columns"]
+            self._column_names = state["column_names"]
+            self._next_row_id = state["next_row_id"]
+            self._rows = d["rows"]
+
+            for k, v in d["indexes"].items():
+                idx = Index(loadit=v)
+                if self._indexes is None:
+                    self._indexes = {}
+                self._indexes[k] = idx
+
 
     def get_rows_with_rids(self):
         pass
 
     def get_rows(self):
-        pass
+        return self._rows
 
     def matches_template(self, row, tmp):
         pass
@@ -302,17 +390,37 @@ class CSVDataTable:
 
     def find_by_index(self, tmp, idx: Index):
         r = idx.find_rows(tmp)
-        res = [self._rows[rid] for rid in r]
+        # res = [self._rows[rid] for rid in r]
+        res = {}
+        for rid in r:
+            res[rid] = self._rows[rid]
         return res
 
-    def find_by_scan_template(self, tmp, rows):
-        pass
 
-    def find_by_template(self, tmp, fields, use_index=True):
+    def find_by_scan_template(self, tmp, rows: dict):
+        """
+        scan the table using tmp and without using index info.
+        :param tmp:  dict type. template to match
+        :param rows: list type. rows to scan
+        :return: list type. Matched rows.
+        """
+        res = {}
+        for k, v in rows.items():
+            # check if match the template
+            b_match = True
+            for kk in tmp.keys():
+                if tmp[kk] != v[kk]:
+                    b_match = False
+            if b_match:
+                res[k] = v
+        return res
+
+
+    def find_by_template(self, tmp, fields=None, use_index=True):
         """
 
         :param tmp: Dictionary type, template to match
-        :param fields: Fields to get, like project clause
+        :param fields: list type. Fields to get, like project clause
         :param use_index: if True, use index, if False, no index used
         :return: CSVDataTable type . A new derived CSVDataTable
         """
@@ -330,8 +438,18 @@ class CSVDataTable:
             # scan on the rows left
             result = self.find_by_scan_template(tmp, res_index)
 
+        # filter columns using fields that the user requests
+        if fields:
+            filtered_result = {}
+            for k, v in result.items():
+                for field in fields:
+                    if k not in filtered_result.keys():
+                        filtered_result[k] = {}
+                    filtered_result[k][field] = result[k][field]
+            result = filtered_result
+
         derived_table_name = "Derived CSVDataTable: " + self._table_name
-        new_t = CSVDataTable(table_name=derived_table_name, loadit=True)
+        new_t = CSVDataTable(table_name=derived_table_name, primary_key_columns=self._primary_key_columns, loadit=True)
         new_t.load_from_rows(table_name=derived_table_name, rows=result)
 
         return new_t
@@ -352,11 +470,54 @@ class CSVDataTable:
 
         self._rows[rid] = copy.copy(row)
 
+    def delete(self, tmp):
+        """
+        delete those rows matching the template
+        :param tmp: template to match
+        :return:
+        """
+        # find the rows matching the template
+        idx = self.get_best_index(tmp)
+        if idx is not None:
+            idx = self._indexes[idx]
+            # get the rows find by the index
+            res_index = self.find_by_index(tmp=tmp, idx=idx)
+            # scan on the rows left
+            res = self.find_by_scan_template(tmp, res_index)
+        else:
+            res = self.find_by_scan_template(tmp, self.get_rows())
+
+        # delete data in indexes
+        for rid, row in res.items():
+            for idx in self._indexes.values():
+                key_str = self._get_index_key_string(row, idx)
+                rid_list = idx._index_data[key_str]
+                if rid in rid_list:
+                    rid_list.remove(rid)
+                if len(rid_list) == 0:
+                    del idx._index_data[key_str]
+
+
+        # delete data in rows
+        for rid in res.keys():
+            del self._rows[rid]
+
+
+        print("no")
+
+
+
+
+
     def _get_sub_template(self, tmp, table_name):
         pass
 
     def load_from_rows(self, table_name, rows):
-        pass
+        self._rows = rows
+        self._next_row_id = max(rows.keys()) + 1
+        if self._primary_key_columns:
+            self.add_index("PRIMARY", self._primary_key_columns, "PRIMARY")
+
 
 
 

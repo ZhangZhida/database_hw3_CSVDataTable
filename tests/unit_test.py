@@ -35,6 +35,9 @@ def make_test_table(b_index=True):
     t.insert(r)
     r["uni"] = "yy"
     t.insert(r)
+    r["first_name"] = "fei"
+    r["uni"] = "xx"
+    t.insert(r)
     if b_index:
         index_columns = ["first_name", "last_name"]
         t.add_index(index_name="name", column_list=index_columns, kind="INDEX")
@@ -103,16 +106,59 @@ def test_save_db():
     # save
     t.save()
 
+def test_load_db():
+    t = make_test_table(b_index=False)
+    t.load()
+
+
+
+
 def test_find_by_template():
-    t = make_test_table()
+    t = make_test_table(b_index=False)
 
     tmp = {
-        "last_name": "zhang"
+        "first_name": "zhida"
     }
-    fields = tmp.keys()
-    new_t = t.find_by_template(tmp, fields, use_index=True)
+    fields = ["uni", "last_name"]
+    new_t = t.find_by_template(tmp, fields, use_index=False)
     print("new_t = ", new_t)
 
+def test_insert():
+    t = make_test_table()
+    r = {
+        "uni": "dd",
+        "first_name": "vince",
+        "last_name": "zhang"
+    }
+    t.insert(r)
+    print("-------- CSVDataTable.insert() ---------", t)
+
+
+def test_delete():
+    t = make_test_table()
+    tmp = {
+        "first_name": "zhida"
+    }
+    t.delete(tmp)
+    print("-------- CSVDataTable.delete() ---------", t)
+
+def test_import_data():
+    t = make_test_table()
+    rows = [
+        {
+            "uni": "cc",
+            "first_name": "xin",
+            "last_name": "wei"
+        },
+        {
+            "uni": "ff",
+            "first_name": "li",
+            "last_name": "zhang"
+        }
+    ]
+    t.import_data(rows)
+    t.save()
+    print("-------- CSVDataTable.import_data() ---------", t)
 
 
 
@@ -127,4 +173,8 @@ def test_find_by_template():
 # test_compute_key_add_to_index()
 # test_insert_on_index()
 # test_save_db()
-test_find_by_template()
+# test_find_by_template()
+# test_load_db()
+# test_insert()
+# test_delete()
+test_import_data()

@@ -1,0 +1,16 @@
+-------- CSVDataTable.import_data() --------- 
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 7
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3], 'xx': [4], 'cc': [5], 'ff': [6]}
+
+index_name = name
+index_columns = ['first_name', 'last_name']
+kind = INDEX
+index_data = {'zhida_zhang': [2, 3], 'fei_zhang': [4], 'xin_wei': [5], 'li_zhang': [6]}
+

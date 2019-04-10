@@ -4,7 +4,7 @@
     "primary_key_columns": [
       "uni"
     ],
-    "next_row_id": 4,
+    "next_row_id": 7,
     "column_names": [
       "uni",
       "first_name",
@@ -21,6 +21,21 @@
       "uni": "yy",
       "first_name": "zhida",
       "last_name": "zhang"
+    },
+    "4": {
+      "uni": "xx",
+      "first_name": "fei",
+      "last_name": "zhang"
+    },
+    "5": {
+      "uni": "cc",
+      "first_name": "xin",
+      "last_name": "wei"
+    },
+    "6": {
+      "uni": "ff",
+      "first_name": "li",
+      "last_name": "zhang"
     }
   },
   "indexes": {
@@ -36,6 +51,15 @@
         ],
         "yy": [
           3
+        ],
+        "xx": [
+          4
+        ],
+        "cc": [
+          5
+        ],
+        "ff": [
+          6
         ]
       }
     },
@@ -50,6 +74,15 @@
         "zhida_zhang": [
           2,
           3
+        ],
+        "fei_zhang": [
+          4
+        ],
+        "xin_wei": [
+          5
+        ],
+        "li_zhang": [
+          6
         ]
       }
     }
