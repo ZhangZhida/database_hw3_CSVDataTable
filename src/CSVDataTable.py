@@ -364,11 +364,11 @@ class CSVDataTable:
     def matches_template(self, row, tmp):
         pass
 
-    def get_best_index(self, tmp):
+    def get_best_index(self, tmp, return_count=False):
         """
 
         :param tmp: dict type. template
-        :return: String type. most selective index name
+        :return: (String type, int type). most selective index name and its best count
         """
 
         best = None
@@ -385,7 +385,10 @@ class CSVDataTable:
                         if cnt > best:
                             best = cnt
                             name = k
-        return name
+        if return_count:
+            return name, best
+        else:
+            return name
 
 
     def find_by_index(self, tmp, idx: Index):
@@ -450,6 +453,7 @@ class CSVDataTable:
 
         derived_table_name = "Derived CSVDataTable: " + self._table_name
         new_t = CSVDataTable(table_name=derived_table_name, primary_key_columns=self._primary_key_columns, loadit=True)
+
         new_t.load_from_rows(table_name=derived_table_name, rows=result)
 
         return new_t
@@ -505,6 +509,140 @@ class CSVDataTable:
 
         print("no")
 
+    def _get_access_path(self, on_fields):
+        """
+
+        :param on_fields:  on clause fields
+        :return:  (string type, int type). return access path string and distinct count
+        """
+        fake_tmp = {}
+        fake_value = 0
+        for field in on_fields:
+            fake_tmp[field] = fake_value
+        path, count = self.get_best_index(fake_tmp, return_count=True)
+        return path, count
+
+
+    def _choose_scan_probe_table(self, right_tb, on_fields):
+        left_path, left_count = self._get_access_path(on_fields)
+        right_path, right_count = right_tb._get_access_path(on_fields)
+
+        if left_path is None and right_path is None:
+            return self, right_tb
+        elif left_path is None and right_path is not None:
+            return right_tb, self
+        elif left_path is not None and right_path is None:
+            return self, right_tb
+        elif right_count < left_count:
+            return self, right_tb
+        else:
+            return self, right_tb
+
+    def _get_sub_where_template(self, where_template):
+        """
+        select the items in where template that related to the self table and form a new sub where clause
+        :param where_template: dict type. like {"People.nameLast": "James", "People.nameFirst": "Lebron"}
+        :return: dict type. return None if no field matches to make a sub template
+        """
+        sub_template = None
+        if where_template is None:
+            return None
+        for k,v in where_template.items():
+            tbl, column = k.split(".")
+            if tbl == self._table_name:
+                if sub_template is None:
+                    sub_template = {}
+                sub_template[column] = v
+        return sub_template
+
+    def _get_on_template(self, l_r, on_fields):
+        on_template = None
+        for field in on_fields:
+            if on_template is None:
+                on_template = {}
+            on_template[field] = l_r[field]
+
+        return on_template
+
+    def _join_l_row_r_rows(self, left_r, right_rs, on_fields):
+        """
+
+        :param left_r: dict type. A single row
+        :param right_rs:  dict type. rows to join.
+        :param on_fields:
+        :return:
+        """
+        new_rows = []
+        for right_r in right_rs:
+            new_rows.append(self._join_row_and_row(left_r, right_r, on_fields))
+        return new_rows
+
+    def _join_row_and_row(self, left_r, right_r, on_fields):
+        res = {}
+        for k, v in left_r.items():
+            res[k] = v
+        for k, v in right_r.items():
+            if k not in on_fields:
+                res[k] = v
+        return res
+
+
+    def join(self, right_tb, on_fields, where_template=None, project_fields=None):
+        """
+        Self is the left (scan) table. right_table is the probe table
+        :param right_tb:
+        :param on_fields:
+        :param where_template:
+        :param project_fields:
+        :return:
+        """
+        # swap scan table and probe table based on the selectivity of those tables
+        scan_tb, probe_tb = self._choose_scan_probe_table(right_tb, on_fields)
+
+        scan_sub_template = scan_tb._get_sub_where_template(where_template)
+        probe_sub_template = probe_tb._get_sub_where_template(where_template)
+
+        if scan_sub_template is not None:
+            scan_rows = self.find_by_template(scan_sub_template)
+        else:
+            scan_rows = scan_tb
+
+        join_result = {}
+        join_next_rid = 1
+
+        # probing on the right table
+
+        for rid, l_r in scan_rows._rows.items():
+            on_template = self._get_on_template(l_r, on_fields)
+            if probe_sub_template is not None:
+                right_where = {**probe_sub_template, **on_template}
+            else:
+                right_where = on_template
+
+            # find on the probe table
+            current_right_rows = right_tb.find_by_template(right_where)
+
+            if current_right_rows is not None and len(current_right_rows._rows) > 0:
+                new_rows_list = self._join_l_row_r_rows(l_r, current_right_rows._rows.values(), on_fields)
+                new_rows = {}
+                for r in new_rows_list:
+                    new_rows[join_next_rid] = r
+                    join_next_rid += 1
+
+                join_result.update(new_rows)
+
+        # make new CSVDataTable from the join_result
+        derived_table_name = "Derived CSVDataTable: " + self._table_name
+        joined_column_names = list(set([*scan_tb._column_names, *probe_tb._column_names]))
+        new_t = CSVDataTable(table_name=derived_table_name, primary_key_columns=self._primary_key_columns,
+                             column_names=joined_column_names, loadit=True)
+
+        new_t.load_from_rows(table_name=derived_table_name, rows=join_result)
+
+        return new_t
+
+
+
 
 
 
@@ -514,7 +652,8 @@ class CSVDataTable:
 
     def load_from_rows(self, table_name, rows):
         self._rows = rows
-        self._next_row_id = max(rows.keys()) + 1
+        if rows.keys() is not None and len(rows.keys()) > 0:
+            self._next_row_id = max(rows.keys()) + 1
         if self._primary_key_columns:
             self.add_index("PRIMARY", self._primary_key_columns, "PRIMARY")
 

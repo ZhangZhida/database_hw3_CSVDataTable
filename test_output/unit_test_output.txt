@@ -1,4 +1,234 @@
--------- CSVDataTable.import_data() --------- 
+pydev debugger: process 29254 is connecting
+
+
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 1
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = None
+
+
+
+
+
+
+
+
+DEBUG:root:-------- test_create_table ---------
+DEBUG:root:-------- test_load_data ---------
+t =  {2: OrderedDict([('id', '1'), ('u', '138'), ('x', '143')]), 3: OrderedDict([('id', '2'), ('u', '93'), ('x', '104')]), 4: OrderedDict([('id', '3'), ('u', '61'), ('x', '69')]), 5: OrderedDict([('id', '4'), ('u', '179'), ('x', '260')]), 6: OrderedDict([('id', '5'), ('u', '48'), ('x', '75')]), 7: OrderedDict([('id', '6'), ('u', '37'), ('x', '63')]), 8: OrderedDict([('id', '7'), ('u', '29'), ('x', '50')]), 9: OrderedDict([('id', '8'), ('u', '23'), ('x', '48')]), 10: OrderedDict([('id', '9'), ('u', '30'), ('x', '111')]), 11: OrderedDict([('id', '10'), ('u', '2'), ('x', '50')])}
+
+
+
+
+
+
+
+key =  zhang_zhida
+DEBUG:root:-------- test_compute_key_add_to_index ---------
+i =  
+index_name = test
+index_columns = ['last_name', 'first_name']
+kind = INDEX
+index_data = {'zhang_zhida': ['2', '3']}
+
+
+
+
+
+
+
+
+t =  
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+DEBUG:root:-------- test_insert_on_index ---------
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 3
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3]}
+
+index_name = name
+index_columns = ['first_name', 'last_name']
+kind = INDEX
+index_data = {'zhida_zhang': [2, 3]}
+
+
+
+
+
+
+
+
+DEBUG:root:-------- test_save_db ---------
+save DB success!
+
+
+
+
+
+
+
+
+DEBUG:root:-------- test_find_by_template ---------
+DEBUG:root:Index used is = None
+new_t =  
+table name = Derived CSVDataTable: students
+primary_key_columns = None
+column_names = None
+new_row_id = 4
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3]}
+
+
+
+
+
+
+
+
+DEBUG:root:-------- test_load_db ---------
+
+before load()
+
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 4
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3], 'xx': [4]}
+
+
+
+
+after load()
+
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 4
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3]}
+
+index_name = name
+index_columns = ['first_name', 'last_name']
+kind = INDEX
+index_data = {'zhida_zhang': [2, 3]}
+
+
+
+
+
+
+
+
+DEBUG:root:-------- test_insert ---------
+
+before insert
+
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 4
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3], 'xx': [4]}
+
+index_name = Name
+index_columns = ['first_name', 'last_name']
+kind = INDEX
+index_data = {'zhida_zhang': [2, 3], 'fei_zhang': [4]}
+
+
+after insert
+
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 5
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3], 'xx': [4], 'dd': [5]}
+
+index_name = Name
+index_columns = ['first_name', 'last_name']
+kind = INDEX
+index_data = {'zhida_zhang': [2, 3], 'fei_zhang': [4], 'vince_zhang': [5]}
+
+
+
+
+
+
+
+
+
+DEBUG:root:-------- test_delete ---------
+before delete
+
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 4
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [2], 'yy': [3], 'xx': [4]}
+
+index_name = Name
+index_columns = ['first_name', 'last_name']
+kind = INDEX
+index_data = {'zhida_zhang': [2, 3], 'fei_zhang': [4]}
+
+no
+
+after delete
+
+table name = students
+primary_key_columns = ['uni', 'first_name', 'last_name']
+column_names = ['uni', 'first_name', 'last_name']
+new_row_id = 4
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'xx': [4]}
+
+index_name = Name
+index_columns = ['first_name', 'last_name']
+kind = INDEX
+index_data = {'fei_zhang': [4]}
+
+
+
+
+
+
+
+
+DEBUG:root:-------- test_import_data ---------
+
 table name = students
 primary_key_columns = ['uni', 'first_name', 'last_name']
 column_names = ['uni', 'first_name', 'last_name']
@@ -9,8 +239,47 @@ index_columns = ['uni']
 kind = PRIMARY
 index_data = {'zz': [2], 'yy': [3], 'xx': [4], 'cc': [5], 'ff': [6]}
 
-index_name = name
+index_name = Name
 index_columns = ['first_name', 'last_name']
 kind = INDEX
 index_data = {'zhida_zhang': [2, 3], 'fei_zhang': [4], 'xin_wei': [5], 'li_zhang': [6]}
+
+
+
+
+
+
+
+
+path =  Name ,count =  2
+
+
+
+DEBUG:root:-------- test_access_path ---------
+
+
+
+
+DEBUG:root:-------- CSVDataTable.join() ---------
+DEBUG:root:Index used is = PRIMARY
+DEBUG:root:Index used is = PRIMARY
+DEBUG:root:Index used is = PRIMARY
+
+table name = Derived CSVDataTable: students
+primary_key_columns = ['teamID', 'first_name', 'last_name', 'bat', 'uni']
+column_names = ['teamID', 'first_name', 'last_name', 'bat', 'uni']
+new_row_id = 3
+
+index_name = PRIMARY
+index_columns = ['uni']
+kind = PRIMARY
+index_data = {'zz': [1], 'yy': [2]}
+
+rows = {1: {'uni': 'zz', 'first_name': 'zhida', 'last_name': 'zhang', 'bat': 2, 'teamID': 'spurs'}, 2: {'uni': 'yy', 'first_name': 'zhida', 'last_name': 'zhang', 'bat': 3, 'teamID': 'spurs'}}
+
+
+
+
+
+
 
