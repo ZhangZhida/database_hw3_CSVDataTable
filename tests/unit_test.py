@@ -1,6 +1,8 @@
 from src import CSVDataTable
 import logging
 import csv
+import time
+import json
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -86,7 +88,7 @@ def test_load_data():
                                   primary_key_columns=["id"], loadit=None)
     t.import_data(rows=rows)
 
-    print("t = ", t._rows)
+    print("t = ", json.dumps(t._rows, indent=2))
     print("\n\n\n\n\n\n")
 
 def test_compute_key_add_to_index():
@@ -146,6 +148,66 @@ def test_save_db():
     t.save()
     print("save DB success!\n")
     print("\n\n\n\n\n\n")
+
+def test_save_db2():
+
+    logging.debug("-------- test_save_db ---------")
+    rows, cols = load("/home/zhida/Desktop/Database/code/HW3/CSVFile/city.csv")
+    t = CSVDataTable.CSVDataTable(table_name="city", column_names=cols,
+                                  primary_key_columns=["id"],
+                                  loadit=None)
+    t.import_data(rows=rows)
+    t.save()
+    print("save DB success!\n")
+    print("\n\n\n\n\n\n")
+
+def test_save_db3():
+
+    logging.debug("-------- test_save_db ---------")
+    rows, cols = load("/home/zhida/Desktop/Database/code/HW3/CSVFile/Philippines_poverty_estimates.csv")
+    t = CSVDataTable.CSVDataTable(table_name="Philippines_poverty_estimates", column_names=cols,
+                                  primary_key_columns=["PCODE"],
+                                  loadit=None)
+    t.import_data(rows=rows)
+    t.add_index("YEAR2012", ["Prelim_2012", "Pov_2012"], "INDEX")
+    t.save()
+    print("save DB success!\n")
+    print("\n\n\n\n\n\n")
+
+    time1 = time.time()
+    for i in range(1000):
+        t.find_by_template(tmp={"Municipality_City": "San Juan"}, use_index=False)
+    time2 = time.time()
+    print("1000 iterations takes time = ", str(time2- time1))
+
+def test_save_db4():
+
+    logging.debug("-------- test_save_db ---------")
+    rows, cols = load("/home/zhida/Desktop/Database/code/HW3/CSVFile/beach-weather-stations-automated-sensors-1.csv")
+    t = CSVDataTable.CSVDataTable(table_name="automated-sensors", column_names=cols,
+                                  primary_key_columns=["Measurement ID"],
+                                  loadit=None)
+    t.import_data(rows=rows)
+    t.add_index("Station Name", ["Station Name"], "INDEX")
+    t.save()
+    print("save DB success!\n")
+    print("\n\n\n\n\n\n")
+
+    time1 = time.time()
+    for i in range(100):
+        t.find_by_template(tmp={"Station Name": "Oak Street Weather Station",
+                                "Wet Bulb Temperature": 55}, use_index=False)
+    time2 = time.time()
+    print("takes time = ", str(time2 - time1) + " second")
+
+    time1 = time.time()
+    for i in range(100):
+        t.find_by_template(tmp={"Station Name": "Oak Street Weather Station",
+                                "Wet Bulb Temperature": 55}, use_index=True)
+    time2 = time.time()
+    print("takes time = ", str(time2 - time1) + " second")
+
+
 
 def test_load_db():
 
@@ -245,7 +307,7 @@ def test_join():
     new_t = t1.join(t2, on_fields=["uni"], where_template={"teams.teamID": "spurs"})
 
     print(new_t)
-    print("rows =", new_t.get_rows())
+    print("rows =", json.dumps(new_t.get_rows(), indent=2))
     print("\n\n\n\n\n\n")
 
 
@@ -258,6 +320,9 @@ test_load_data()
 test_compute_key_add_to_index()
 test_insert_on_index()
 test_save_db()
+test_save_db2()
+# test_save_db3()
+# test_save_db4()
 test_find_by_template()
 test_load_db()
 test_insert()

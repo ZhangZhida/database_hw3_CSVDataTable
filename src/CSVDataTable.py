@@ -642,11 +642,6 @@ class CSVDataTable:
         return new_t
 
 
-
-
-
-
-
     def _get_sub_template(self, tmp, table_name):
         pass
 
