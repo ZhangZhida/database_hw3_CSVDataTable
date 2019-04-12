@@ -207,6 +207,32 @@ def test_save_db4():
     time2 = time.time()
     print("takes time = ", str(time2 - time1) + " second")
 
+def test_index_or_no_index():
+    logging.debug("-------- test_index_or_no_index ---------")
+
+    rows, cols = load("/home/zhida/Desktop/Database/code/HW3/CSVFile/beach-weather-stations-automated-sensors-1.csv")
+    t = CSVDataTable.CSVDataTable(table_name="automated-sensors", column_names=cols,
+                                  primary_key_columns=["Measurement ID"],
+                                  loadit=None)
+    t.import_data(rows=rows)
+    t.add_index("Station Name", ["Station Name"], "INDEX")
+    t.add_index("Wet Bulb Temperature", ["Wet Bulb Temperature"], "INDEX")
+    print("\n\n\n")
+
+    time1 = time.time()
+    for i in range(1000):
+        t.find_by_template(tmp={"Wet Bulb Temperature": '7.0'}, use_index=False, debug_log=False)
+    time2 = time.time()
+    print("[-No index-] -> run find_by_template(), 1000 iterations\n")
+    print("takes time = ", str(time2 - time1) + " second\n")
+
+    time1 = time.time()
+    for i in range(1000):
+        t.find_by_template(tmp={"Wet Bulb Temperature": '7.0'}, use_index=True, debug_log=False)
+    time2 = time.time()
+    print("[-Use index-] -> run find_by_template(), 1000 iterations\n")
+    print("takes time = ", str(time2 - time1) + " second")
+
 
 
 def test_load_db():
@@ -321,8 +347,9 @@ test_compute_key_add_to_index()
 test_insert_on_index()
 test_save_db()
 test_save_db2()
-# test_save_db3()
-# test_save_db4()
+test_save_db3()
+test_save_db4()
+test_index_or_no_index()
 test_find_by_template()
 test_load_db()
 test_insert()

@@ -419,7 +419,7 @@ class CSVDataTable:
         return res
 
 
-    def find_by_template(self, tmp, fields=None, use_index=True):
+    def find_by_template(self, tmp, fields=None, use_index=True, debug_log=True):
         """
 
         :param tmp: Dictionary type, template to match
@@ -428,7 +428,8 @@ class CSVDataTable:
         :return: CSVDataTable type . A new derived CSVDataTable
         """
         idx = self.get_best_index(tmp)
-        logging.debug("Index used is = %s", idx)
+        if debug_log:
+            logging.debug("Index used is = %s", idx)
 
         if idx is None or use_index is False:
             # if not using indexes
